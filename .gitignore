@@ -1,0 +1,9 @@
+.env
+tg_auth.json
+journal*.db
+research_cache/
+__pycache__/
+*.log
+reports/
+*.pkl
+*.zip

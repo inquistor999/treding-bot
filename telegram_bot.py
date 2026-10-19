@@ -15,7 +15,6 @@ import tg_store
 from journal import Journal
 
 API = f"https://api.telegram.org/bot{C.TELEGRAM_TOKEN}/"
-MAX_TRADES_PER_ANALYSIS = 2
 MENU = [[{"text": "🔍 Tahlil qilish", "callback_data": "analyze"},
          {"text": "🔄 Yangilash", "callback_data": "refresh"}],
         [{"text": "📂 Ochiq bitimlar", "callback_data": "open"}]]
@@ -111,8 +110,14 @@ def analyze_and_trade(chat):
                    "Boshqa ochiq bitimlardan mustaqil. Tarixiy testda kutilgan natija manfiy (tajriba uchun).",
              MENU_NO_SIGNAL)
         return
-    ready.sort(reverse=True)
-    for _, sym, m, df, sig in ready[:MAX_TRADES_PER_ANALYSIS]:
+    ready.sort(key=lambda r: -r[0])
+    # Ideal vaziyat (A) bir nechta bo'lsa — 3 tagacha bitim; aks holda faqat eng yaxshi bittasi
+    a_list = [r for r in ready if L.risk.grade(r[4]) == "A"]
+    chosen = a_list[:C.MAX_A_TRADES] if len(a_list) >= 2 else ready[:1]
+    mode_txt = (f"Ideal vaziyat: {len(chosen)} ta bitim ochaman." if len(a_list) >= 2
+                else "Bitta eng yaxshi bitim ochaman (bozor ideal emas yoki yagona signal).")
+    send(chat, mode_txt)
+    for _, sym, m, df, sig in chosen:
         try:
             fill = L.open_position(j, sym, m, df, sig, "demo")
         except B.MT5Error as e:

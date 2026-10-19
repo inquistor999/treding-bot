@@ -54,11 +54,13 @@ def on_candle(journal, symbol, market, df, allow_open=True):
     sig = S.signal(df, reg, market)
     if not sig:
         return events
-    ok, why = risk.allowed(journal, symbol, df.index[-1])
-    if not ok:
-        return events
-    qty, risk_amount = risk.position_size(journal.equity(), sig["entry"], sig["sl"])
+    eq = journal.equity()
+    qty, risk_amount = risk.position_size(eq, sig["entry"], sig["sl"], risk.risk_fraction(sig))
     if qty <= 0:
+        return events
+    ok, why = risk.allowed(journal, symbol, df.index[-1], base_equity=eq, kind="swing",
+                           new_risk=risk_amount, grade_=risk.grade(sig))
+    if not ok:
         return events
     journal.open_trade(symbol, market, sig, df.index[-1], qty, risk_amount)
     events.append({"event": "open", "symbol": symbol, "side": sig["side"], "entry": sig["entry"],

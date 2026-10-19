@@ -178,6 +178,13 @@ string DoOpen(const string &L[])
    if(lots < vmin) return Err("minimal lot riskdan oshadi");
    lots = NormalizeDouble(lots, 8);
 
+   // Marja tekshiruvi: kerakli marja bo'sh marjaning 80% idan oshsa, bitim ochilmaydi (hisob "yonib ketmasin")
+   double margin = 0;
+   if(OrderCalcMargin(isBuy ? ORDER_TYPE_BUY : ORDER_TYPE_SELL, sym, lots, price, margin)
+      && margin > AccountInfoDouble(ACCOUNT_MARGIN_FREE) * 0.8)
+      return Err("marja yetarli emas: kerak " + DoubleToString(margin, 2) + ", bo'sh " +
+                 DoubleToString(AccountInfoDouble(ACCOUNT_MARGIN_FREE), 2));
+
    trade.SetTypeFillingBySymbol(sym);
    string cmt = Get(L, "comment");              // MT5 ro'yxatida ko'rinadi: bot-swing / bot-scalp
    if(cmt == "") cmt = "bot";

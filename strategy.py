@@ -17,12 +17,16 @@ def _momentum(df, market):
         return None
     entry, a = float(last.close), float(last.atr)
     sgn = 1 if side == "long" else -1
+    lo, hi = C.GRADE_A_VOL
+    ideal = (abs(float(move)) >= C.GRADE_A_MOVE * C.MOMO_THR and float(last.adx) >= C.GRADE_A_ADX
+             and lo <= float(last.atr_rank) <= hi)
     return {
         "side": side,
         "entry": entry,
         "sl": entry - sgn * C.SL_ATR * a,
         "tp": entry + sgn * C.TP_ATR * a,
         "ctx": {
+            "grade": "A" if ideal else "B",
             "regime": "MOMENTUM", "score": round(abs(float(move)), 2), "adx": round(float(last.adx), 1),
             "rsi": round(float(last.rsi), 1), "atr_pct": round(float(last.atr_pct) * 100, 3),
             "atr_rank": round(float(last.atr_rank), 2), "atr": a,

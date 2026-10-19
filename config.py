@@ -28,10 +28,18 @@ WATCHLIST = {
 TIMEFRAME = "1h"
 
 START_EQUITY = 1000.0          # paper hisob (USD)
-RISK_PER_TRADE = 0.01          # har bitimda depozitning 1% i riskga
-DAILY_LOSS_LIMIT = 0.03        # kunlik zarar 3% ga yetsa, shu kuni yangi bitim yo'q
+# Risk sifatga qarab o'zgaradi: ideal vaziyat (A) — katta risk va ko'proq bitim, oddiy (B) — kichikroq risk va 1 ta bitim
+RISK_A = 0.025                 # A (ideal): bitimga hisobning 2.5% i
+RISK_B = 0.015                 # B (oddiy): 1.5%
+RISK_PER_TRADE = RISK_B        # umumiy standart (eski kod uchun)
+GRADE_A_MOVE = 1.3             # A: impuls kuchi chegaradan kamida 1.3 baravar katta
+GRADE_A_ADX = 25               # A: trend kuchli
+GRADE_A_VOL = (0.2, 0.8)       # A: tebranish me'yorida (ATR rank oralig'i)
+MAX_A_TRADES = 3               # ideal vaziyatda bir vaqtda ochiq oddiy bitimlar soni
+MAX_B_TRADES = 3               # oddiy vaziyatda ham 3 tagacha (1 ta qilinsa, tarixiy natija yomonlashdi: PF 1.16 -> 0.96)
+DAILY_LOSS_LIMIT = 0.06        # kunlik zarar 6% ga yetsa, shu kuni yangi bitim yo'q
 MAX_OPEN_POSITIONS = 4         # botning bir vaqtdagi ochiq bitimlari (qo'lda ochilganlar hisobga olinmaydi)
-MAX_TOTAL_RISK = 0.03          # barcha ochiq bitimlar jami riski: hisobning 3% idan oshmasin
+MAX_TOTAL_RISK = 0.08          # barcha ochiq bitimlar jami riski: hisobning 8% idan oshmasin
 MAX_LEVERAGE = 5.0             # bitim hajmi / equity chegarasi
 ALLOW_SHORT = {"crypto": True, "forex": True, "gold": True}   # XM CFD da short ruxsat etilgan
 
@@ -44,7 +52,7 @@ MAX_SPREAD_PCT = {"crypto": 0.0015, "forex": 0.0004, "gold": 0.0004}
 SCALP_TARGET_PCT = 0.0035      # maqsad: narxning 0.35% i (~40 pip EURUSD da), kamida 1 ATR(M15)
 SCALP_SL_MULT = 1.5            # SL = 1.5 x TP masofa (yutuq darajasi yuqori, tarixda eng kam zararli)
 SCALP_HOLD_MIN = 240           # shuncha daqiqadan keyin vaqt bo'yicha yopiladi
-SCALP_RISK = 0.005             # oddiy bitimning yarmi
+SCALP_RISK = 0.01              # razgon: hisobning 1% i (majburiy kirish, ustunlik isbotlanmagan, shuning uchun A dan kichik)
 SCALP_MAX_COST_RATIO = 0.20    # spread / maqsad shundan katta bo'lsa (masalan ETH), kirmaymiz
 
 # Qaysi bozorlarda savdo qilinadi. Tadqiqot: forexda ustunlik topilmadi, oltin va kriptoda bor.

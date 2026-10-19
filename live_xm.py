@@ -100,7 +100,8 @@ def check_entry(j, sym, m, df, fresh):
         shown = "noma'lum" if sp is None else f"{sp * 100:.3f}%"
         return None, "spread", f"signal bor ({sig['side']}), lekin spread {shown} (chegara {C.MAX_SPREAD_PCT[m] * 100:.3f}%)"
     bal = B.balance()
-    ok, why = risk.allowed(j, sym, df.index[-1], base_equity=bal, kind="swing", new_risk=bal * C.RISK_PER_TRADE)
+    ok, why = risk.allowed(j, sym, df.index[-1], base_equity=bal, kind="swing",
+                           new_risk=bal * risk.risk_fraction(sig), grade_=risk.grade(sig))
     if not ok:
         return None, "limit", f"signal bor ({sig['side']}), lekin xavf limiti: {why}"
     return sig, "signal", ""
@@ -109,8 +110,9 @@ def check_entry(j, sym, m, df, fresh):
 def open_position(j, sym, m, df, sig, mode):
     """Bitim ochadi (lotni EA risk summasi va SL masofasidan hisoblaydi). fill qaytaradi yoki MT5Error."""
     bal = B.balance()
-    fill = B.open_market(sym, sig["side"], bal * C.RISK_PER_TRADE,
-                         abs(sig["entry"] - sig["sl"]), abs(sig["tp"] - sig["entry"]), comment="bot-swing")
+    fill = B.open_market(sym, sig["side"], bal * risk.risk_fraction(sig),
+                         abs(sig["entry"] - sig["sl"]), abs(sig["tp"] - sig["entry"]),
+                         comment=f"bot-swing-{risk.grade(sig)}")
     sig.update(entry=fill["price"], sl=fill["sl"], tp=fill["tp"])
     j.open_trade(sym, m, sig, df.index[-1], fill["lots"], fill["risk"], ticket=fill["position"])
     return fill
@@ -118,10 +120,14 @@ def open_position(j, sym, m, df, sig, mode):
 
 def open_message(mode, sym, sig, fill):
     arrow = "📈 LONG (sotib olish)" if sig["side"] == "long" else "📉 SHORT (sotish)"
+    g = risk.grade(sig)
+    gtxt = "A (ideal vaziyat, katta risk)" if g == "A" else "B (oddiy vaziyat, o'rtacha risk)"
+    pct = risk.risk_fraction(sig) * 100
     return (f"🟢 BITIM OCHILDI [{mode}] {sym}\n{arrow}\n"
+            f"Sifat: {gtxt}\n"
             f"Lot: {fill['lots']} | Kirish: {fill['price']}\n"
             f"SL: {sig['sl']:.5g} | TP: {sig['tp']:.5g}\n"
-            f"Risk: {fill['risk']:.2f} USD ({C.RISK_PER_TRADE * 100:.0f}% hisob)\n"
+            f"Risk: {fill['risk']:.2f} USD (reja {pct:.1f}% hisob)\n"
             f"Sabab: impuls kuchi {sig['ctx'].get('move')} (chegara {C.MOMO_THR}), ADX {sig['ctx']['adx']}, RSI {sig['ctx']['rsi']}")
 
 
